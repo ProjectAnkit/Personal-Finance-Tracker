@@ -4,7 +4,7 @@
 
 The **Personal Finance Tracker** is your go-to mobile application for managing finances seamlessly. With a sleek design and user-friendly interface, it empowers users to track their transactions and budgets efficiently.
 
-![Finance Tracker](https://via.placeholder.com/800x200/000000/FFFFFF?text=Personal+Finance+Tracker)
+![Finance Tracker](https://static.vecteezy.com/system/resources/thumbnails/000/173/239/small_2x/Sample_Money_Vector_Illustration.jpg)
 
 ## Tech Stack
 
@@ -28,7 +28,7 @@ The **Personal Finance Tracker** is your go-to mobile application for managing f
 - **Date Filtering**: 
   - Filter transactions by date for better tracking.
 
-![Features](https://via.placeholder.com/800x200/000000/FFFFFF?text=Key+Features)
+![Features](https://t4.ftcdn.net/jpg/03/03/55/51/360_F_303555158_0h7YQZePL54n1UFE0Y5u4xqLSvHklqwc.jpg)
 
 ## Installation
 
@@ -92,5 +92,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [MongoDB](https://www.mongodb.com/)
 
 ---
-
-Feel free to replace the placeholder images with actual visuals or icons related to finance or use specific graphics that match your project!
