@@ -17,7 +17,7 @@ The **Personal Finance Tracker** is your go-to mobile application for managing f
 ### Database: MongoDB 🗄️
 - NoSQL database for flexible data storage and retrieval.
 
-## Features
+![Features](https://t4.ftcdn.net/jpg/03/03/55/51/360_F_303555158_0h7YQZePL54n1UFE0Y5u4xqLSvHklqwc.jpg)
 
 - **Transaction Management**: 
   - Add, edit, and delete transactions effortlessly.
@@ -27,8 +27,6 @@ The **Personal Finance Tracker** is your go-to mobile application for managing f
 
 - **Date Filtering**: 
   - Filter transactions by date for better tracking.
-
-![Features](https://t4.ftcdn.net/jpg/03/03/55/51/360_F_303555158_0h7YQZePL54n1UFE0Y5u4xqLSvHklqwc.jpg)
 
 ## Installation
 
