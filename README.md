@@ -1,7 +1,3 @@
-Here’s a visually appealing README for your **Personal Finance Tracker** project, incorporating the elements you specified:
-
----
-
 # Personal Finance Tracker 💰
 
 ## Overview
