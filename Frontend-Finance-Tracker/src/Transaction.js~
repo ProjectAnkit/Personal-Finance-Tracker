@@ -1,0 +1,145 @@
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Button, TouchableOpacity } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import moment from 'moment';
+import axios from 'axios';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
+const API_TRANSACTION_URL = 'http://192.168.1.4:8080/transactions/';
+
+const TransactionList = ({ transactions, onFilterTransactions, onResetFilter }) => {
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+    const handleConfirm = async (date) => {
+        setSelectedDate(date);
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        try {
+            const response = await axios.post(`${API_TRANSACTION_URL}${formattedDate}`);
+            onFilterTransactions(response.data);
+        } catch (e) {
+            console.error(e);
+        }
+        hideDatePicker();
+    };
+
+    const hideDatePicker = () => {
+        setDatePickerVisibility(false);
+    };
+
+    const resetFilter = async () => {
+        setSelectedDate(null);
+        onResetFilter();
+    };
+
+    const deleteTransaction = async (id) => {
+        try {
+            await axios.delete(`${API_TRANSACTION_URL}${id}`);
+            await onResetFilter();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    return (
+        <View>
+            {/* Date Picker Button and Reset Button */}
+            <View style={styles.datePickerContainer}>
+                <View style={{ marginHorizontal: 10 }}>
+                    <Button title="Select" onPress={() => setDatePickerVisibility(true)} color={"black"} />
+                </View>
+
+                {selectedDate && (
+                    <Button title="Reset" onPress={resetFilter} color={"black"} />
+                )}
+                <Text style={styles.selectedDateText}>
+                    {selectedDate ? moment(selectedDate).format('MMMM Do YYYY') : 'All Transactions'}
+                </Text>
+            </View>
+
+            {/* DateTimePickerModal */}
+            <DateTimePickerModal
+                isVisible={isDatePickerVisible}
+                mode="date"
+                onConfirm={handleConfirm}
+                onCancel={hideDatePicker}
+            />
+
+            {/* Transaction list */}
+            <FlatList
+                data={transactions}
+                keyExtractor={(item) => item.id.toString()}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                    <View style={styles.transactionItem}>
+                        <MaterialIcons
+                            name={item.type === 'income' ? 'attach-money' : 'payment'}
+                            size={24}
+                            color={item.type === 'income' ? '#4CAF50' : '#F44336'}
+                        />
+                        <View style={styles.transactionDetails}>
+                            <Text style={styles.transactionType}>{item.type.toUpperCase()}</Text>
+                            <Text style={styles.transactionAmount}>₹{item.amount}</Text>
+                            <Text style={styles.transactionCategory}>{item.category}</Text>
+                            <Text style={styles.transactionDate}>
+                                {moment(item.dateTime).format('MMMM Do YYYY, h:mm a')}
+                            </Text>
+                        </View>
+                        <TouchableOpacity onPress={() => deleteTransaction(item.id)} style={styles.deleteButton}>
+                            <MaterialIcons name="delete" size={24} color="#F44336" />
+                        </TouchableOpacity>
+                    </View>
+                )}
+            />
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    datePickerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        marginVertical: 10,
+    },
+    selectedDateText: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+        textAlign: 'center',
+    },
+    transactionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    transactionDetails: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    deleteButton: {
+        padding: 10,
+    },
+    transactionType: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    transactionAmount: {
+        fontSize: 16,
+        color: '#333',
+    },
+    transactionCategory: {
+        fontSize: 14,
+        color: '#525151',
+    },
+    transactionDate: {
+        fontSize: 12,
+        color: '#aaa',
+    },
+});
+
+export default TransactionList;

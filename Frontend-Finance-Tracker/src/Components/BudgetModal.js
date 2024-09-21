@@ -1,0 +1,114 @@
+import React, { useState } from 'react';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { addBudget } from "../API/Budgets";
+
+const BudgetModal = ({ isVisible, onClose, fetchBudgets }) => {
+    const [category, setCategory] = useState('');
+    const [budgetPrice, setBudgetPrice] = useState('');
+
+    const handleAddBudget = async () => {
+        if (!category || !budgetPrice) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        try {
+            await addBudget(budgetPrice, category);
+            await fetchBudgets();
+            onClose();
+        } catch (error) {
+            console.error("Error adding budget:", error);
+            alert('Failed to add budget. Please try again.');
+        }
+    };
+
+    return (
+        <Modal visible={isVisible} transparent={true} animationType="slide">
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Add New Budget</Text>
+                    <TextInput
+                        placeholder="Category"
+                        style={styles.input}
+                        value={category}
+                        onChangeText={setCategory}
+                        placeholderTextColor="#A09E9E"
+                    />
+                    <TextInput
+                        placeholder="Budget Price"
+                        style={styles.input}
+                        keyboardType="numeric"
+                        value={budgetPrice}
+                        onChangeText={setBudgetPrice}
+                        placeholderTextColor="#A09E9E"
+                    />
+                    <TouchableOpacity style={styles.addButton} onPress={handleAddBudget}>
+                        <Text style={styles.addButtonText}>Add Budget</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const styles = StyleSheet.create({
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: 320,
+        padding: 25,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        elevation: 10,
+        shadowColor: '#aaa',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#D3D3D3',
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 20,
+        backgroundColor: '#F3F1F1',
+        color: '#333',
+    },
+    addButton: {
+        backgroundColor: '#333',
+        borderRadius: 25,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    closeButton: {
+        backgroundColor: '#F44336',
+        borderRadius: 25,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+});
+
+export default BudgetModal;

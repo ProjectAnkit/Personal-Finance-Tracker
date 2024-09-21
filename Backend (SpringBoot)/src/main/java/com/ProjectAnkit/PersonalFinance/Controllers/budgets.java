@@ -1,0 +1,68 @@
+package com.ProjectAnkit.PersonalFinance.Controllers;
+
+import com.ProjectAnkit.PersonalFinance.Entity.Budget;
+import com.ProjectAnkit.PersonalFinance.Services.BudgetServices;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+
+@RestController
+@RequestMapping("/budgets")
+public class budgets {
+
+    @Autowired
+    private BudgetServices budgetServices;
+
+    @GetMapping("/")
+    public ResponseEntity getAllBudgets(){
+        List<Budget> budgetList = budgetServices.getAllBudgets();
+        return new ResponseEntity<>(budgetList,HttpStatus.OK);
+    }
+
+    @GetMapping("/{category}")
+    public ResponseEntity getBudgetByCategory(@PathVariable String category){
+        Budget budget = budgetServices.getBudgetByCategory(category);
+        if(budget == null){
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }else{
+            return new ResponseEntity<>(budget,HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/")
+    public ResponseEntity createBudget(@RequestBody Budget budget){
+        Budget budget1 = budgetServices.addBudget(budget);
+        return new ResponseEntity<>(budget1,HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{category}")
+    public ResponseEntity deleteBudget(@PathVariable String category){
+        String response = budgetServices.deleteBudget(category);
+        if(response == null){
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity(response,HttpStatus.OK);
+    }
+
+    @PutMapping("/{category}")
+    public ResponseEntity updateBudget(@PathVariable String category, @RequestBody Budget budget){
+        Budget budget1 = budgetServices.setBudget(budget,category);
+        if(budget1 == null){
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity(budget1,HttpStatus.OK);
+    }
+
+    @GetMapping("/percentage/{category}")
+    public ResponseEntity budgetFulfilled(@PathVariable String category){
+        Object percentage = budgetServices.getPercentageBudgetFulfillment(category);
+        if(percentage == null){
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity(percentage,HttpStatus.OK);
+    }
+}

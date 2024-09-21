@@ -1,0 +1,80 @@
+package com.ProjectAnkit.PersonalFinance.Services;
+
+import com.ProjectAnkit.PersonalFinance.Entity.Transaction;
+import com.ProjectAnkit.PersonalFinance.Repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+public class TransactionServices {
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
+    }
+
+    public double getSavingsLeftInAccount() {
+        List<Transaction> transactions = transactionRepository.findAll();
+        double savingLeft = 0;
+        for (Transaction t : transactions) {
+            if ("income".equals(t.getType())) {
+                savingLeft += t.getAmount();
+            } else if ("expense".equals(t.getType())) {
+                savingLeft -= t.getAmount();
+            }
+        }
+
+        return savingLeft;
+    }
+
+
+    public Transaction createTransaction(Transaction transaction) {
+        transaction.setDateTime(LocalDateTime.now());
+        transactionRepository.save(transaction);
+        return transaction;
+    }
+
+
+    public String deleteTransactionById(String id) {
+        if (transactionRepository.existsById(id)) {
+            transactionRepository.deleteById(id);
+            return "Transaction deleted successfully";
+        }else{
+            return null;
+        }
+    }
+
+    public String deleteAllTransactions() {
+        transactionRepository.deleteAll();
+        return "All transactions are deleted successfully";
+    }
+
+    public Transaction setTransaction(Transaction transaction,String id) {
+        Transaction transaction1 = transactionRepository.findById(id).orElse(null);
+        if(transaction1 != null) {
+            transaction1.setType(transaction.getType());
+            transaction1.setAmount(transaction.getAmount());
+            transaction1.setCategory(transaction.getCategory());
+            transaction1.setDateTime(LocalDateTime.now());
+            return transactionRepository.save(transaction1);
+        }
+        else {
+            return null;
+        }
+    }
+
+
+    public List<Transaction>getTransactionsByDate(LocalDate date) {
+        return transactionRepository.findAll().stream()
+                .filter(transaction -> transaction.getDateTime().toLocalDate().equals(date))
+                .collect(Collectors.toList());
+    }
+}

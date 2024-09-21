@@ -1,0 +1,121 @@
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import axios from 'axios';
+import CustomAppBar from './Components/CustomAppBar';
+import TransactionList from "./Transaction";
+import TransactionalModal from './Components/TransactionalModal';
+import { useNavigation } from '@react-navigation/native';
+import BudgetListPage from './Budget';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { Alert } from 'react-native'; // Import Alert for dialog
+
+const API_TRANSACTION_URL = 'http://192.168.1.4:8080/transactions/';
+
+const HomePage = () => {
+    const navigation = useNavigation();
+    const [view, setView] = useState('Transactions');
+    const [transactions, setTransactions] = useState([]);
+    const [isTransactionModalVisible, setTransactionModalVisible] = useState(false);
+
+    useEffect(() => {
+        if (view === 'Transactions') {
+            fetchTransactions();
+        }
+    }, [view]);
+
+    const fetchTransactions = async () => {
+        try {
+            const response = await axios.get(API_TRANSACTION_URL);
+            const sortedTransactions = response.data.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+            setTransactions(sortedTransactions);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchSavings = async () => {
+        try {
+            const response = await axios.get(`${API_TRANSACTION_URL}getSavings`);
+            Alert.alert("Savings Left", `You have ₹${response.data}`);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const toggleTransactionModal = () => {
+        setTransactionModalVisible(!isTransactionModalVisible);
+    };
+
+    const handleSwitch = (option) => {
+        setView(option);
+    };
+
+    const handleFilterTransactions = (filteredTransactions) => {
+        setTransactions(filteredTransactions);
+    };
+
+    const handleResetFilter = async () => {
+        await fetchTransactions(); // Re-fetch all transactions
+    };
+
+    return (
+        <View style={styles.container}>
+            <CustomAppBar view={view} onSwitch={handleSwitch} onBackPress={() => navigation.goBack()} />
+            {view === 'Transactions' ? (
+                <>
+                    <TransactionList
+                        transactions={transactions}
+                        onFilterTransactions={handleFilterTransactions}
+                        onResetFilter={handleResetFilter}
+                    />
+                    <TouchableOpacity style={styles.walletIcon} onPress={fetchSavings}>
+                        <MaterialIcons name="account-balance-wallet" size={40} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.fab} onPress={toggleTransactionModal}>
+                        <MaterialIcons name="add" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <TransactionalModal
+                        isVisible={isTransactionModalVisible}
+                        onClose={toggleTransactionModal}
+                        fetchTransactions={fetchTransactions}
+                    />
+                </>
+            ) : (
+                <BudgetListPage />
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+    },
+    walletIcon: {
+        position: 'absolute',
+        right: 20,
+        bottom: 100, // Adjust position above the FAB
+        backgroundColor: '#000',
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 60,
+        height: 60,
+        elevation: 4,
+    },
+    fab: {
+        position: 'absolute',
+        right: 20,
+        bottom: 30,
+        backgroundColor: '#000',
+        borderRadius: 50,
+        width: 60,
+        height: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+    },
+});
+
+export default HomePage;

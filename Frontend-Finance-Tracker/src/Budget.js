@@ -1,0 +1,229 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { fetchBudgets, fetchBudgetFulfillmentPercentage, deleteBudget } from './API/Budgets';
+import { PieChart } from 'react-native-gifted-charts';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import BudgetModal from './Components/BudgetModal'; // Import BudgetModal
+
+const { width } = Dimensions.get('window');
+
+const BudgetListPage = () => {
+    const [budgets, setBudgets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isBudgetModalVisible, setBudgetModalVisible] = useState(false);
+    const getBudgets = useCallback(async () => {
+        try {
+            const fetchedBudgets = await fetchBudgets();
+            const budgetsWithPercentages = await Promise.all(fetchedBudgets.map(async (budget) => {
+                try {
+                    let percentageString = await fetchBudgetFulfillmentPercentage(budget.category);
+                    // Remove '%' and parse to float, then convert to integer
+                    let fulfilledPercentage = parseInt(percentageString.replace('%', '').trim(), 10);
+
+                    // Validate the percentage value
+                    if (isNaN(fulfilledPercentage)) {
+                        console.warn(`Invalid percentage value for ${budget.category}: ${percentageString}`);
+                        fulfilledPercentage = 0; // Fallback to 0 if parsing fails
+                    }
+
+                    return { ...budget, fulfilledPercentage };
+                } catch (percentError) {
+                    console.error(`Error fetching percentage for ${budget.category}:`, percentError);
+                    return { ...budget, fulfilledPercentage: 0 }; // Fallback to 0 if there's an error
+                }
+            }));
+            setBudgets(budgetsWithPercentages);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching budgets:", error);
+            setError("Error fetching budgets");
+            setLoading(false);
+        }
+    }, []);
+
+
+    useEffect(() => {
+        getBudgets();
+    }, [getBudgets]);
+
+    const handleDelete = async (category) => {
+        try {
+            await deleteBudget(category);
+            const updatedBudgets = budgets.filter(budget => budget.category !== category);
+            setBudgets(updatedBudgets);
+        } catch (error) {
+            console.error("Error deleting budget:", error);
+            setError("Error deleting budget");
+        }
+    };
+
+    const toggleBudgetModal = () => {
+        setBudgetModalVisible(!isBudgetModalVisible);
+    };
+
+    if (loading) {
+        return <Text style={styles.loadingText}>Loading...</Text>;
+    }
+
+    if (error) {
+        return <Text style={styles.loadingText}>{error}</Text>;
+    }
+
+    const CenterLabel = ({ percentage }) => {
+        return (
+            <View style={styles.centerLabelContainer}>
+                <Text style={styles.percentageText}>{`${percentage}%`}</Text>
+                <Text style={styles.labelText}>Completed</Text>
+            </View>
+        );
+    };
+
+    return (
+        <View style={styles.container}>
+            <FlatList
+                data={budgets}
+                keyExtractor={(item) => item.id.toString()} // Ensure keyExtractor returns a string
+                renderItem={({ item }) => {
+                    const fulfilledPercentage = item.fulfilledPercentage || 0;
+                    const remainingPercentage = 100 - fulfilledPercentage;
+                    const pieData = [
+                        {
+                            text: "Fulfilled",
+                            value: fulfilledPercentage,
+                            color: "#36A2EB",
+                            textSize: 10,
+                            textColor: "#ffffff",
+                            shiftTextX: -13,
+                        },
+                        {
+                            text: "Remaining",
+                            value: remainingPercentage,
+                            color: "#d10109",
+                            textSize: 10,
+                            textColor: "#ffffff",
+                            shiftTextX: -13,
+                        }
+                    ];
+
+                    return (
+                        <View style={styles.budgetCard}>
+                            <PieChart
+                                data={pieData}
+                                radius={80}
+                                showText={true}
+                                chartConfig={{
+                                    backgroundColor: "#fff",
+                                    backgroundGradientFrom: "#fff",
+                                    backgroundGradientTo: "#fff",
+                                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                                    strokeWidth: 2,
+                                }}
+                                accessor={"value"}
+                                backgroundColor={"transparent"}
+                                paddingLeft={"15"}
+                                center={[0, 0]}
+                                innerCircleColor={"white"}
+                                donut={true}
+                                innerRadius={40}
+                                centerLabelComponent={() => <CenterLabel percentage={item.fulfilledPercentage} />}
+                            />
+                            <View style={styles.budgetDetails}>
+                                <Text style={styles.budgetTitle}>{item.category}</Text>
+                                <Text style={styles.budgetAmount}>₹{item.budgetPrice}</Text>
+                                <Text style={styles.budgetStartDate}>Start Date: {new Date(item.startDate).toLocaleDateString()}</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => handleDelete(item.category)} style={styles.deleteIcon}>
+                                <MaterialIcons name="delete" size={24} color="#FF6347" />
+                            </TouchableOpacity>
+                        </View>
+                    );
+                }}
+            />
+            <TouchableOpacity style={styles.fab} onPress={toggleBudgetModal}>
+                <MaterialIcons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
+            <BudgetModal
+                isVisible={isBudgetModalVisible}
+                onClose={toggleBudgetModal}
+                fetchBudgets={getBudgets} // Pass the refresh function here
+            />
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#f0f0f0',
+    },
+    loadingText: {
+        textAlign: 'center',
+        fontSize: 18,
+        color: '#888',
+        marginTop: 20,
+    },
+    centerLabelContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    percentageText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    labelText: {
+        fontSize: 12,
+        color: '#888',
+    },
+    budgetCard: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 15,
+        marginBottom: 15,
+        elevation: 3,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        position: 'relative',
+    },
+    budgetDetails: {
+        flex: 1,
+        marginLeft: 15,
+    },
+    budgetTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    budgetAmount: {
+        fontSize: 16,
+        color: '#333',
+        marginVertical: 5,
+    },
+    budgetStartDate: {
+        fontSize: 14,
+        color: '#888',
+    },
+    deleteIcon: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'transparent',
+    },
+    fab: {
+        position: 'absolute',
+        right: 20,
+        bottom: 30,
+        backgroundColor: '#000',
+        borderRadius: 50,
+        width: 60,
+        height: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+    },
+});
+
+export default BudgetListPage;

@@ -1,0 +1,72 @@
+import React from 'react';
+import { Appbar } from 'react-native-paper';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+
+const CustomAppBar = ({ onSwitch, view }) => {
+    return (
+        <Appbar.Header style={styles.appbar}>
+            <View style={styles.iconContainer}>
+                <FontAwesome5
+                    name={view === 'Transactions' ? 'money-check' : 'piggy-bank'}
+                    size={24}
+                    color="#fff"
+                />
+            </View>
+            <View style={styles.switchContainer}>
+                <TouchableOpacity
+                    style={[styles.switchButton, view === 'Transactions' && styles.activeButton]}
+                    onPress={() => onSwitch('Transactions')}
+                >
+                    <Text style={[styles.switchText, view === 'Transactions' && styles.activeText]}>Transactions</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.switchButton, view === 'Budgets' && styles.activeButton]}
+                    onPress={() => onSwitch('Budgets')}
+                >
+                    <Text style={[styles.switchText, view === 'Budgets' && styles.activeText]}>Budgets</Text>
+                </TouchableOpacity>
+            </View>
+        </Appbar.Header>
+    );
+};
+
+const styles = StyleSheet.create({
+    appbar: {
+        backgroundColor: '#000', // Black background
+        elevation: 0,
+        justifyContent: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    iconContainer: {
+        marginRight: 10,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+    },
+    switchButton: {
+        transform: [{scale: 0.9}],
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        backgroundColor: '#e0e0e0',
+        marginHorizontal: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    activeButton: {
+        backgroundColor: '#707070',
+        transform: [{ scale: 1.1 }],
+    },
+    switchText: {
+        color: '#000',
+        fontWeight: 'bold',
+    },
+    activeText: {
+        color: '#fff',
+    },
+});
+
+export default CustomAppBar;

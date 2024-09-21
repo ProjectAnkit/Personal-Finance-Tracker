@@ -1,0 +1,78 @@
+package com.ProjectAnkit.PersonalFinance.Services;
+
+
+import com.ProjectAnkit.PersonalFinance.Entity.Budget;
+import com.ProjectAnkit.PersonalFinance.Repository.BudgetRepository;
+import com.ProjectAnkit.PersonalFinance.Repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Component
+public class BudgetServices {
+
+    @Autowired
+    private BudgetRepository budgetRepository;
+
+    @Autowired
+    private TransactionServices transactionServices;
+
+    public List<Budget> getAllBudgets(){
+        return budgetRepository.findAll();
+    }
+
+    public Budget getBudgetByCategory(String category){
+        Budget budget = budgetRepository.findBudgetByCategory(category);
+        if(budget == null){
+            return null;
+        }else{
+            return budget;
+        }
+    }
+
+    public Budget addBudget(Budget budget){
+        budget.setStartDate(LocalDateTime.now());
+        return budgetRepository.save(budget);
+    }
+
+    public Budget setBudget(Budget budget,String category){
+         Budget budget1 = budgetRepository.findBudgetByCategory(category);
+         if(budget1 != null){
+             budget1.setCategory(budget1.getCategory());
+              budget1.setBudgetPrice(budget.getBudgetPrice());
+              budget1.setStartDate(budget1.getStartDate());
+              budgetRepository.save(budget1);
+              return budget1;
+         }
+         else{
+             return null;
+         }
+    }
+
+    public String deleteBudget(String category){
+        Budget budget = budgetRepository.findBudgetByCategory(category);
+        if(budget != null){
+            budgetRepository.deleteBudgetByCategory(category);
+            return "Budget deleted successfully";
+        }else{
+            return null;
+        }
+    }
+
+    public Object getPercentageBudgetFulfillment(String category){
+        double savingsLeft = transactionServices.getSavingsLeftInAccount();
+        Budget budget = getBudgetByCategory(category);
+        if(budget != null){
+            double perc = (savingsLeft/budget.getBudgetPrice())*100;
+            perc = Math.min(perc,100);
+            String formatted = String.format("%.2f%%",perc);
+            return formatted;
+        }
+        
+        return null;
+    }
+
+}
